@@ -1,0 +1,7 @@
+eyeD3
+requests
+spotipy
+yt_dlp
+youtube_search
+python-telegram-bot
+python-dotenv
