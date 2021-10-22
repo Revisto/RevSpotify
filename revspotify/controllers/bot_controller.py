@@ -8,7 +8,6 @@ class BotController:
 
     def query(self):
         text = self.update.message.text
-        print(self.update.message)
         chat_id = self.update.message["chat"]["id"]
         analyse_results = Spotify().analyse_spotify_link(text)
         if analyse_results is False:
