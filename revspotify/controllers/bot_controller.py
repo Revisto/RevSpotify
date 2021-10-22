@@ -10,7 +10,6 @@ class BotController:
         link = self.update.message.text
         chat_id = self.update.message["chat"]["id"]
         analyse_results = Spotify().analyse_spotify_link(link)
-        print(analyse_results)
         if analyse_results is False:
             self.update.message.reply_text(View.link_is_not_valid())
             return
