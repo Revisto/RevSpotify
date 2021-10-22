@@ -7,11 +7,13 @@ class BotController:
         self.context = context
 
     def query(self):
-        link = self.update.message.text
+        text = self.update.message.text
+        print(self.update.message)
         chat_id = self.update.message["chat"]["id"]
-        analyse_results = Spotify().analyse_spotify_link(link)
+        analyse_results = Spotify().analyse_spotify_link(text)
         if analyse_results is False:
-            self.update.message.reply_text(View.link_is_not_valid())
+            if self.update.message["chat"]["type"] == "private":
+                self.update.message.reply_text(View.link_is_not_valid())
             return
         link = analyse_results["link"]
         spotify_link_type = analyse_results["spotify_link_type"]
