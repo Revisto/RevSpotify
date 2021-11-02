@@ -20,6 +20,29 @@ class Spotify:
             )
         )
 
+
+    def convert_youtube_time_duration_to_seconds(self, time_duration):
+        time_duration_splitted = time_duration.split(":")
+        seconds = 0
+        print(time_duration_splitted)
+        print(time_duration)
+        if len(time_duration_splitted) == 1:
+            seconds += int(time_duration_splitted[-1])
+        elif len(time_duration_splitted) == 2:
+            seconds += int(time_duration_splitted[-1])
+            seconds += int(time_duration_splitted[-2]) * 60
+        elif len(time_duration_splitted) == 3:
+            seconds += int(time_duration_splitted[-1])
+            seconds += int(time_duration_splitted[-2]) * 60
+            seconds += int(time_duration_splitted[-3]) * 60 * 60
+        elif len(time_duration_splitted) == 4:
+            seconds += int(time_duration_splitted[-1])
+            seconds += int(time_duration_splitted[-2]) * 60
+            seconds += int(time_duration_splitted[-3]) * 60 * 60
+            seconds += int(time_duration_splitted[-4]) * 60 * 60 * 60
+
+        return seconds
+
     def download_track(self, link):
         results = self.spotify.track(link)
         song = results["name"]
@@ -47,36 +70,7 @@ class Spotify:
 
         millis = results["duration_ms"]
         millis = int(millis)
-        seconds = (millis / 1000) % 60
-        minutes = (millis / (1000 * 60)) % 60
-        seconds = int(seconds)
-        minutes = int(minutes)
-
-        if seconds >= 10:
-            time_duration = "{0}:{1}".format(minutes, seconds)
-            time_duration1 = "{0}:{1}".format(minutes, seconds + 1)
-            time_duration2 = "{0}:{1}".format(minutes, seconds - 1)
-            time_duration3 = "{0}:{1}".format(minutes, seconds + 2)
-
-            if seconds == 10:
-                time_duration2 = "{0}:0{1}".format(minutes, seconds - 1)
-            elif seconds == 58 or seconds == 59:
-                time_duration3 = "{0}:0{1}".format(minutes + 1, seconds - 58)
-                if seconds == 59:
-                    time_duration1 = "{0}:0{1}".format(minutes + 1, seconds - 59)
-
-        else:
-            time_duration = "{0}:0{1}".format(minutes, seconds)
-            time_duration1 = "{0}:0{1}".format(minutes, seconds + 1)
-            time_duration2 = "{0}:0{1}".format(minutes, seconds - 1)
-            time_duration3 = "{0}:0{1}".format(minutes, seconds + 2)
-            if seconds == 9 or seconds == 8:
-                time_duration3 = "{0}:{1}".format(minutes, seconds + 2)
-                if seconds == 9:
-                    time_duration1 = "{0}:{1}".format(minutes, seconds + 1)
-
-            elif seconds == 0:
-                time_duration2 = "{0}:{1}".format(minutes - 1, seconds + 59)
+        spotify_track_seconds = (millis / 1000)
 
         trackname = song + fetures
         # Download Cover
@@ -90,10 +84,8 @@ class Spotify:
         LINKASLI = ""
         for URLSSS in results:
             timeyt = URLSSS["duration"]
-            if timeyt == time_duration or timeyt == time_duration1:
-                LINKASLI = URLSSS["url_suffix"]
-                break
-            elif timeyt == time_duration2 or timeyt == time_duration3:
+            youtube_video_seconds = self.convert_youtube_time_duration_to_seconds(timeyt)
+            if abs(youtube_video_seconds - spotify_track_seconds) <= 4:
                 LINKASLI = URLSSS["url_suffix"]
                 break
         if LINKASLI == "":
