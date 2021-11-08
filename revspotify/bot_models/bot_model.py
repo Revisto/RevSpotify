@@ -20,26 +20,13 @@ class Spotify:
             )
         )
 
-
     def convert_youtube_time_duration_to_seconds(self, time_duration):
         time_duration_splitted = time_duration.split(":")
+        time_duration_splitted.reverse()
         seconds = 0
-        print(time_duration_splitted)
-        print(time_duration)
-        if len(time_duration_splitted) == 1:
-            seconds += int(time_duration_splitted[-1])
-        elif len(time_duration_splitted) == 2:
-            seconds += int(time_duration_splitted[-1])
-            seconds += int(time_duration_splitted[-2]) * 60
-        elif len(time_duration_splitted) == 3:
-            seconds += int(time_duration_splitted[-1])
-            seconds += int(time_duration_splitted[-2]) * 60
-            seconds += int(time_duration_splitted[-3]) * 60 * 60
-        elif len(time_duration_splitted) == 4:
-            seconds += int(time_duration_splitted[-1])
-            seconds += int(time_duration_splitted[-2]) * 60
-            seconds += int(time_duration_splitted[-3]) * 60 * 60
-            seconds += int(time_duration_splitted[-4]) * 60 * 60 * 60
+        
+        for i in range(len(time_duration_splitted)):
+            seconds += 60 ** (i) * int(time_duration_splitted[i])
 
         return seconds
 
@@ -70,7 +57,7 @@ class Spotify:
 
         millis = results["duration_ms"]
         millis = int(millis)
-        spotify_track_seconds = (millis / 1000)
+        spotify_track_seconds = millis / 1000
 
         trackname = song + fetures
         # Download Cover
@@ -84,7 +71,9 @@ class Spotify:
         LINKASLI = ""
         for URLSSS in results:
             timeyt = URLSSS["duration"]
-            youtube_video_seconds = self.convert_youtube_time_duration_to_seconds(timeyt)
+            youtube_video_seconds = self.convert_youtube_time_duration_to_seconds(
+                timeyt
+            )
             if abs(youtube_video_seconds - spotify_track_seconds) <= 4:
                 LINKASLI = URLSSS["url_suffix"]
                 break
@@ -120,7 +109,12 @@ class Spotify:
             3, open(f"static/covers/{trackname}.png", "rb").read(), "image/png"
         )
         aud.tag.save()
-        return {"cover_path": f"static/covers/{trackname}.png", "music_path": f"static/songs/{trackname}.mp3", "name": trackname, "error": None}
+        return {
+            "cover_path": f"static/covers/{trackname}.png",
+            "music_path": f"static/songs/{trackname}.mp3",
+            "name": trackname,
+            "error": None,
+        }
 
     def album(self, link):
         results = self.spotify.album_tracks(link)
@@ -130,14 +124,12 @@ class Spotify:
 
         return tracks
 
-
     def top_tracks_artist(self, link):
         results = self.spotify.artist_top_tracks(link)
         top_tracks = list()
         for top_track in results["tracks"]:
             top_tracks.append(top_track["external_urls"]["spotify"])
         return top_tracks
-
 
     def playlist(self, link):
         results = self.spotify.playlist_tracks(link)
@@ -152,10 +144,12 @@ class Spotify:
         if spotify_regex_match == list():
             return False
         spotify_link_type = spotify_regex_match[0][-2]
-        link = f"https://open.spotify.com/{spotify_link_type}/{spotify_regex_match[0][-1]}"
+        link = (
+            f"https://open.spotify.com/{spotify_link_type}/{spotify_regex_match[0][-1]}"
+        )
 
         return {"spotify_link_type": spotify_link_type, "link": link}
-            
+
 
 class File:
     def remove_file(self, path):
