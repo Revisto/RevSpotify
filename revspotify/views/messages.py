@@ -40,3 +40,36 @@ class View:
     def album_done():
         message = "اینم از موزیک‌های این آلبوم."
         return message
+
+    @staticmethod
+    def receive_count_of_playlist_songs_to_send(count):
+        message = f"این پلی لیست {count}تا موزیک داره. چندتاشو بفرستم؟"
+        return message
+
+    @staticmethod
+    def cancel():
+        messages = ["باش!", "باشه!", "حله!", "اوکی!",]
+        message = choice(messages)
+        return message
+    
+    @staticmethod
+    def not_valid_number():
+        message = "این عدد معتبر نیست :( \n پروسه کنسل شد."
+        return message
+
+    @staticmethod
+    def search_intro():
+        message = "دنبال چه آهنگی میگردی؟"
+        return message
+
+    @staticmethod
+    def choose_from_search_results(tracks):
+        message = "کدومشون؟ \n\n"
+        for track in tracks:
+            message += f"{track['track_number']} - {track['song_name']} from {track['artist']} - {track['duration']} \n\n"
+        return message
+    
+    @staticmethod
+    def no_results():
+        message = "نتیجه ای پیدا نشد :("
+        return message

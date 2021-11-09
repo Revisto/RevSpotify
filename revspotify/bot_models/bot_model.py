@@ -6,6 +6,7 @@ import yt_dlp
 import eyed3.id3
 import eyed3
 import re
+from time import strftime, gmtime
 from os import remove
 
 
@@ -24,7 +25,7 @@ class Spotify:
         time_duration_splitted = time_duration.split(":")
         time_duration_splitted.reverse()
         seconds = 0
-        
+
         for i in range(len(time_duration_splitted)):
             seconds += 60 ** (i) * int(time_duration_splitted[i])
 
@@ -115,6 +116,23 @@ class Spotify:
             "name": trackname,
             "error": None,
         }
+
+    def search_track(self, text):
+        results = self.spotify.search(text, limit=7, type="track")
+        links = list()
+        number = 1
+        for track in results["tracks"]["items"]:
+            links.append(
+                {"track_number": number,
+                "link": track["external_urls"]["spotify"], 
+                "song_name": track["name"],
+                "artist": ", ".join([artist["name"] for artist in track["artists"]]),
+                "duration": strftime('%M:%S', gmtime(int(track["duration_ms"]) / 1000)),
+                }
+            )
+            number += 1
+
+        return links
 
     def album(self, link):
         results = self.spotify.album_tracks(link)

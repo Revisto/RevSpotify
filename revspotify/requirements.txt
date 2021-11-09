@@ -5,3 +5,4 @@ yt_dlp
 youtube_search
 python-telegram-bot
 python-dotenv
+validator_collection
