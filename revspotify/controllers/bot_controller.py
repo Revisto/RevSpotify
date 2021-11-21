@@ -4,6 +4,7 @@ from validator_collection.checkers import is_not_empty
 
 from views.messages import View
 from bot_models.bot_model import Spotify, File
+from logger import Logger
 
 class BotController:
     def __init__(self, update, context):
@@ -12,6 +13,7 @@ class BotController:
 
     def query(self):
         text = self.update.message.text
+        Logger(self.context).log_info(self.update.message.from_user, "query", text)
         chat_id = self.update.message["chat"]["id"]
         analyse_results = Spotify().analyse_spotify_link(text)
         if analyse_results is False:
@@ -108,11 +110,13 @@ class BotController:
         return ConversationHandler.END
 
     def start(self):
+        Logger(self.context).log_info(self.update.message.from_user, "start", self.update.message.text)
         welcome_message = View.welcome()
         self.update.message.reply_text(welcome_message)
         return True
 
     def cancel(self):
+        Logger(self.context).log_info(self.update.message.from_user, "cancel", self.update.message.text)
         try:
             self.context.bot.delete_message(self.context.user_data["chat_id"], self.context.user_data["wait_message_id"])
         except:
@@ -131,6 +135,7 @@ class BotController:
         return 1
 
     def search_track(self):
+        Logger(self.context).log_info(self.update.message.from_user, "search_track", self.update.message.text)
         tracks = Spotify().search_track(self.update.message.text)
         if not is_not_empty(tracks):
             self.update.message.reply_text(View.no_results())

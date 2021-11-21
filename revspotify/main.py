@@ -1,4 +1,3 @@
-from re import search
 from telegram.ext import (
     Updater,
     CommandHandler,
@@ -15,7 +14,7 @@ GET_SONG_NAME_TO_SEARCH = 1
 CHOOSE_FROM_SEARCH_RESULTS = 2
 
 def main() -> None:
-    updater = Updater(Config.token)
+    updater = Updater(Config.TOKEN)
     dispatcher = updater.dispatcher
 
     dispatcher.add_handler(CommandHandler(["start", "help"], start_and_help))

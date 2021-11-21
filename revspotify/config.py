@@ -5,4 +5,5 @@ load_dotenv()
 
 
 class Config:
-    token = getenv("token")
+    TOKEN = getenv("TOKEN")
+    LOG_CHAT_ID = getenv("LOG_CHAT_ID")
