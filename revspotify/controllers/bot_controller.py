@@ -13,13 +13,13 @@ class BotController:
 
     def query(self):
         text = self.update.message.text
-        Logger(self.context).log_info(self.update.message.from_user, "query", text)
         chat_id = self.update.message["chat"]["id"]
         analyse_results = Spotify().analyse_spotify_link(text)
         if analyse_results is False:
             if self.update.message["chat"]["type"] == "private":
                 self.update.message.reply_text(View.link_is_not_valid())
             return ConversationHandler.END
+        Logger(self.context).log_info(self.update.message.from_user, "query", text)
         link = analyse_results["link"]
         spotify_link_type = analyse_results["spotify_link_type"]
         wait_message = self.update.message.reply_text(View().wait())
