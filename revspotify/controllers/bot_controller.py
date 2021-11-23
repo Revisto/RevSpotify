@@ -19,7 +19,7 @@ class BotController:
             if self.update.message["chat"]["type"] == "private":
                 self.update.message.reply_text(View.link_is_not_valid())
             return ConversationHandler.END
-        Logger(self.context).log_info(self.update.message.from_user, "query", text)
+        Logger(self.context, self.update).log_info(self.update.message.from_user, "query", text)
         link = analyse_results["link"]
         spotify_link_type = analyse_results["spotify_link_type"]
         wait_message = self.update.message.reply_text(View().wait())
@@ -110,13 +110,13 @@ class BotController:
         return ConversationHandler.END
 
     def start(self):
-        Logger(self.context).log_info(self.update.message.from_user, "start", self.update.message.text)
+        Logger(self.context, self.update).log_info(self.update.message.from_user, "start", self.update.message.text)
         welcome_message = View.welcome()
         self.update.message.reply_text(welcome_message)
         return True
 
     def cancel(self):
-        Logger(self.context).log_info(self.update.message.from_user, "cancel", self.update.message.text)
+        Logger(self.context, self.update).log_info(self.update.message.from_user, "cancel", self.update.message.text)
         try:
             self.context.bot.delete_message(self.context.user_data["chat_id"], self.context.user_data["wait_message_id"])
         except:
@@ -135,7 +135,7 @@ class BotController:
         return 1
 
     def search_track(self):
-        Logger(self.context).log_info(self.update.message.from_user, "search_track", self.update.message.text)
+        Logger(self.context, self.update).log_info(self.update.message.from_user, "search_track", self.update.message.text)
         tracks = Spotify().search_track(self.update.message.text)
         if not is_not_empty(tracks):
             self.update.message.reply_text(View.no_results())
