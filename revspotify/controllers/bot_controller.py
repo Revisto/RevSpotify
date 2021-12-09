@@ -188,7 +188,11 @@ class BotController:
         if len(splitted_text) == 2:
             splitted_text.append("")
         try:
-            chat_id, message, reply_to_message_id = splitted_text
+            if len(splitted_text) < 3:
+                raise Exception()
+            chat_id = splitted_text[0]
+            message = "\n".join(splitted_text[1:-1])
+            reply_to_message_id = splitted_text[-1]
             self.context.bot.send_message(chat_id, message, reply_to_message_id=reply_to_message_id)
             self.update.message.reply_text(View.sent_message_from_admin())
         except:
