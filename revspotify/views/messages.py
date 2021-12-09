@@ -91,3 +91,8 @@ class View:
     def sent_message_from_admin():
         message = "پیام شما ارسال شد!"
         return message
+
+    @staticmethod
+    def error_sending_message_from_admin():
+        message = "متاسفانه پیام شما ارسال نشد!"
+        return message

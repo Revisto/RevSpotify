@@ -187,7 +187,10 @@ class BotController:
         splitted_text = text.split("\n")
         if len(splitted_text) == 2:
             splitted_text.append("")
-        chat_id, message, reply_to_message_id = splitted_text
-        self.context.bot.send_message(chat_id, message, reply_to_message_id=reply_to_message_id)
-        self.update.message.reply_text(View.sent_message_from_admin())
+        try:
+            chat_id, message, reply_to_message_id = splitted_text
+            self.context.bot.send_message(chat_id, message, reply_to_message_id=reply_to_message_id)
+            self.update.message.reply_text(View.sent_message_from_admin())
+        except:
+            self.update.message.reply_text(View.error_sending_message_from_admin())
         return ConversationHandler.END
