@@ -76,3 +76,18 @@ class View:
     def no_results():
         message = "نتیجه ای پیدا نشد :("
         return message
+
+    @staticmethod
+    def not_admin():
+        message = "تو ادمین نیستی, ادمین‌نما!"
+        return message
+
+    @staticmethod
+    def send_message_from_admin_intro():
+        message = "خب, درخواستتون رو اینجوری بنویسید:\n chat_id\n message\n reply_to_message_id"
+        return message
+
+    @staticmethod
+    def sent_message_from_admin():
+        message = "پیام شما ارسال شد!"
+        return message

@@ -3,6 +3,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 
 from controllers.bot_controller import BotController
+from logger import log
 
 TASK, CATEGORY = range(2)
 
@@ -10,6 +11,7 @@ TASK, CATEGORY = range(2)
 def start_and_help(update: Update, context: CallbackContext) -> int:
     return BotController(update, context).start()
     
+@log
 def query(update: Update, context: CallbackContext) -> int:
     return BotController(update, context).query()
 
@@ -30,3 +32,9 @@ def search_track(update: Update, context: CallbackContext) -> int:
 
 def choose_from_search_results(update: Update, context: CallbackContext) -> int:
     return BotController(update, context).choose_from_search_results()
+
+def send_message_from_admin_intro_and_auth(update: Update, context: CallbackContext) -> int:
+    return BotController(update, context).send_message_from_admin_intro_and_auth()
+
+def send_message_from_admin_data(update: Update, context: CallbackContext) -> int:
+    return BotController(update, context).send_message_from_admin_data()

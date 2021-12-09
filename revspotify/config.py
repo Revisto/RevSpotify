@@ -7,3 +7,4 @@ load_dotenv()
 class Config:
     TOKEN = getenv("TOKEN")
     LOG_CHAT_ID = getenv("LOG_CHAT_ID")
+    BOT_USERNAME = getenv("USERNAME")

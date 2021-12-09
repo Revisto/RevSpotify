@@ -11,6 +11,7 @@ from config import Config
 
 PLAYLIST_COUNT = 1
 GET_SONG_NAME_TO_SEARCH = 1
+GET_MESSAGE_DATA_FROM_ADMIN = 1
 CHOOSE_FROM_SEARCH_RESULTS = 2
 
 def main() -> None:
@@ -38,7 +39,16 @@ def main() -> None:
         },
         fallbacks=[CommandHandler("cancel", cancel)]
     )
+    send_message_from_admin_converstation = ConversationHandler(
+        entry_points=[CommandHandler(["send_message_from_admin"], send_message_from_admin_intro_and_auth)],
+        states={
+            GET_MESSAGE_DATA_FROM_ADMIN: [CommandHandler(["cancel", "stop"], cancel),
+            MessageHandler(Filters.text, send_message_from_admin_data)]
+        },
+        fallbacks=[CommandHandler("cancel", cancel)]
+    )
 
+    dispatcher.add_handler(send_message_from_admin_converstation)
     dispatcher.add_handler(search_converstation)
     dispatcher.add_handler(playlist_converstation)
 

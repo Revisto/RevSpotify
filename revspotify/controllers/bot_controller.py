@@ -19,7 +19,7 @@ class BotController:
             if self.update.message["chat"]["type"] == "private":
                 self.update.message.reply_text(View.link_is_not_valid())
             return ConversationHandler.END
-        Logger(self.context, self.update).log_info(self.update.message.from_user, "query", text)
+        Logger(self.context, self.update).log_info("query")
         link = analyse_results["link"]
         spotify_link_type = analyse_results["spotify_link_type"]
         wait_message = self.update.message.reply_text(View().wait())
@@ -110,13 +110,13 @@ class BotController:
         return ConversationHandler.END
 
     def start(self):
-        Logger(self.context, self.update).log_info(self.update.message.from_user, "start", self.update.message.text)
+        Logger(self.context, self.update).log_info("start")
         welcome_message = View.welcome()
         self.update.message.reply_text(welcome_message)
         return True
 
     def cancel(self):
-        Logger(self.context, self.update).log_info(self.update.message.from_user, "cancel", self.update.message.text)
+        Logger(self.context, self.update).log_info("cancel")
         try:
             self.context.bot.delete_message(self.context.user_data["chat_id"], self.context.user_data["wait_message_id"])
         except:
@@ -135,7 +135,7 @@ class BotController:
         return 1
 
     def search_track(self):
-        Logger(self.context, self.update).log_info(self.update.message.from_user, "search_track", self.update.message.text)
+        Logger(self.context, self.update).log_info("search_track")
         tracks = Spotify().search_track(self.update.message.text)
         if not is_not_empty(tracks):
             self.update.message.reply_text(View.no_results())
@@ -173,4 +173,21 @@ class BotController:
         File().remove_file(cover_path)
         self.context.bot.send_audio(chat_id, open(music_path, "rb"))
         File().remove_file(music_path)
+        return ConversationHandler.END
+
+    def send_message_from_admin_intro_and_auth(self):
+        if self.update.message.from_user["username"].lower() != "revisto":
+            self.update.message.reply_text(View.not_admin())
+            return ConversationHandler.END
+        self.update.message.reply_text(View.send_message_from_admin_intro())
+        return 1
+    
+    def send_message_from_admin_data(self):
+        text = self.update.message.text
+        splitted_text = text.split("\n")
+        if len(splitted_text) == 2:
+            splitted_text.append("")
+        chat_id, message, reply_to_message_id = splitted_text
+        self.context.bot.send_message(chat_id, message, reply_to_message_id=reply_to_message_id)
+        self.update.message.reply_text(View.sent_message_from_admin())
         return ConversationHandler.END
