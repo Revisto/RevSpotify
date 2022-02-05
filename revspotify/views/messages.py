@@ -96,3 +96,13 @@ class View:
     def error_sending_message_from_admin():
         message = "متاسفانه پیام شما ارسال نشد!"
         return message
+
+    @staticmethod
+    def error_downloading_track(song_name):
+        message = f"آهنگ {song_name} پیدا نشد!"
+        return message
+
+    @staticmethod
+    def forbidden_spotify_or_spotify_is_high_and_racist_again():
+        message = "خب, اسپاتیفای دوباره مست و نژادپرست شده و دسترسی ما رو بن کرده. به ادمین پیام بدید."
+        return message

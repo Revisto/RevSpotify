@@ -6,6 +6,7 @@ import yt_dlp
 import eyed3.id3
 import eyed3
 import re
+ 
 from time import strftime, gmtime
 from os import remove
 
@@ -14,6 +15,7 @@ class Spotify:
     def __init__(self):
         self.client_id = "a145db3dcd564b9592dacf10649e4ed5"
         self.client_secret = "389614e1ec874f17b8c99511c7baa2f6"
+        
         self.spotify = spotipy.Spotify(
             client_credentials_manager=SpotifyClientCredentials(
                 client_id=self.client_id,
@@ -33,11 +35,18 @@ class Spotify:
 
     def download_track(self, link):
         results = self.spotify.track(link)
+        deezer_results = Deezer().search_and_download_track(results)
+        if deezer_results["error"] is None:
+            return deezer_results
+        
+        youtube_results = self.download_track_from_youtube(results)
+        return youtube_results
+
+    def download_track_from_youtube(self, results):
         song = results["name"]
         artist = results["artists"][0]["name"]
         YTSEARCH = str(song + " " + artist)
         artistfinder = results["artists"]
-        tracknum = results["track_number"]
         album = results["album"]["name"]
         realese_date = int(results["album"]["release_date"][:4])
 
@@ -79,7 +88,7 @@ class Spotify:
                 LINKASLI = URLSSS["url_suffix"]
                 break
         if LINKASLI == "":
-            return {"error": f"Sorry, there is no match for '{song}'"}
+            return {"error": {"song_name": song}}
 
         YTLINK = str("https://www.youtube.com/" + LINKASLI)
         options = {
@@ -104,7 +113,6 @@ class Spotify:
         aud.tag.album = album
         aud.tag.album_artist = artist
         aud.tag.title = trackname
-        aud.tag.track_num = tracknum
         aud.tag.year = realese_date
         aud.tag.images.set(
             3, open(f"static/covers/{trackname}.png", "rb").read(), "image/png"
@@ -118,6 +126,8 @@ class Spotify:
         }
 
     def search_track(self, text):
+        """ Not working, need to fix """
+
         results = self.spotify.search(text, limit=7, type="track")
         links = list()
         number = 1
@@ -173,3 +183,85 @@ class File:
     def remove_file(self, path):
         remove(path)
         return True
+
+
+class Deezer:
+    def __init__(self):
+        from deezer_downloader import deezer
+        self.deezer = deezer
+
+    def search_track(self, text):
+        results = self.deezer.deezer_search(text)[:10]
+        links = list()
+        number = 1
+        for track in results:
+            links.append(
+                {"track_number": number,
+                "id": track["id"], 
+                "song_name": track["title"],
+                "artist": track["artist"],
+                "duration": strftime('%M:%S', gmtime(int(track["duration"]))),
+                }
+            )
+            number += 1
+
+        return links
+
+    def download_track(self, track_id):
+        song = self.deezer.get_song_infos_from_deezer_website(track_id)
+        music_path = self.deezer.download_song(song)["music_path"]
+        cover_path = self.deezer.download_cover(song)["cover_path"]
+
+        return {
+            "cover_path": cover_path,
+            "music_path": music_path,
+            "error": None,
+        }
+
+
+    def search_and_download_track(self, results):
+        song = results["name"]
+        artist = results["artists"][0]["name"]
+        artistfinder = results["artists"]
+        fetures = ""
+        if len(artistfinder) > 1:
+            for lomi in range(0, len(artistfinder)):
+                try:
+                    if lomi < len(artistfinder) - 2:
+                        artistft = artistfinder[lomi + 1]["name"] + " "
+                        fetures += artistft
+                    else:
+                        artistft = artistfinder[lomi + 1]["name"] + " "
+                        fetures += artistft
+                except:
+                    pass
+        else:
+            fetures = ""
+
+        millis = results["duration_ms"]
+        millis = int(millis)
+        spotify_track_seconds = millis / 1000
+        search_query = f"{song} {artist} {fetures}"
+        search_query = " ".join(search_query.split())
+
+
+        search_results = self.deezer.deezer_search(search_query)[:10]
+        if search_results == list():
+            return {"error": {"song_name": search_query}}
+
+        for i in range(len(search_results)):
+            if abs(int(spotify_track_seconds) - search_results[i]["duration"]) <= 1:
+                track = search_results[i]
+                break
+            
+        track_details = self.deezer.get_song_infos_from_deezer_website(track["id"])
+        music_path = self.deezer.download_song(track_details)["music_path"]
+        cover_path = self.deezer.download_cover(track_details)["cover_path"]
+
+
+        return {
+            "cover_path": cover_path,
+            "music_path": music_path,
+            "name": search_query,
+            "error": None,
+        }

@@ -6,3 +6,7 @@ youtube_search
 python-telegram-bot
 python-dotenv
 validator_collection
+py-deezer
+pycryptodome==3.12.0
+youtube_search
+spotipy

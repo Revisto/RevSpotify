@@ -10,3 +10,4 @@ class Config:
     BOT_USERNAME = getenv("BOT_USERNAME")
     if BOT_USERNAME is None:
         BOT_USERNAME = "revspotifybot"
+    DEEZER_ARL = getenv("DEEZER_ARL")

@@ -1,113 +1,128 @@
+import requests
 from telegram.ext import ConversationHandler
 from validator_collection import is_numeric
 from validator_collection.checkers import is_not_empty
 
 from views.messages import View
-from bot_models.bot_model import Spotify, File
+from bot_models.bot_model import Deezer, Spotify, File
 from logger import Logger
+
+# sample decorator
+
+
+def is_the_link_valid(func):
+    def wrapper(*args, **kwargs):
+        analyse_results = Spotify().analyse_spotify_link(args[0].update.message.text)
+        if analyse_results is False:
+            if args[0].update.message["chat"]["type"] == "private":
+                args[0].update.message.reply_text(View.link_is_not_valid())
+            return ConversationHandler.END
+        return func(*args, **kwargs, analyse_results=analyse_results)
+    return wrapper
+
+def is_spotify_high_and_racist_again(func):
+    def wrapper(*args, **kwargs):
+        try:
+            result = requests.get("https://open.spotify.com", timeout=1)
+            if result.status_code != 200:
+                args[0].update.message.reply_text(View.forbidden_spotify_or_spotify_is_high_and_racist_again())
+                return ConversationHandler.END
+        except:
+            args[0].update.message.reply_text(View.forbidden_spotify_or_spotify_is_high_and_racist_again())
+            return ConversationHandler.END
+        return func(*args, **kwargs)
+    return wrapper
 
 class BotController:
     def __init__(self, update, context):
         self.update = update
         self.context = context
 
-    def query(self):
-        text = self.update.message.text
+    @is_the_link_valid
+    @is_spotify_high_and_racist_again
+    def query(self, analyse_results):
         chat_id = self.update.message["chat"]["id"]
-        analyse_results = Spotify().analyse_spotify_link(text)
-        if analyse_results is False:
-            if self.update.message["chat"]["type"] == "private":
-                self.update.message.reply_text(View.link_is_not_valid())
-            return ConversationHandler.END
+        
         Logger(self.context, self.update).log_info("query")
+        
         link = analyse_results["link"]
         spotify_link_type = analyse_results["spotify_link_type"]
+        
         wait_message = self.update.message.reply_text(View().wait())
         wait_message_id = wait_message["message_id"]
+        
+        if isinstance(self.context.user_data.get("wait_messages"), list) is False:
+            self.context.user_data["wait_messages"] = list()
+        self.context.user_data["wait_messages"].append(wait_message_id)
 
+
+        spotify_links = list()
         if spotify_link_type == "track":
-            track_download_result = Spotify().download_track(link)
+            spotify_links.append(link)
+        elif spotify_link_type == "album":
+            spotify_links = Spotify().album(link)
+        elif spotify_link_type == "artist":
+            spotify_links = Spotify().top_tracks_artist(link)
+        elif spotify_link_type == "playlist":
+            spotify_links = Spotify().playlist(link)
+            get_count_message = self.update.message.reply_text(View.receive_count_of_playlist_songs_to_send(len(spotify_links)))
+            self.context.user_data["spotify_links"] = spotify_links
+            self.context.user_data["wait_messages"].append(get_count_message["message_id"])
+            return 1
+
+        for spotify_link in spotify_links:
+            track_download_result = Spotify().download_track(spotify_link)
+
             if track_download_result["error"] is not None:
                 self.context.bot.delete_message(chat_id, wait_message_id)
-                self.update.message.reply_text(track_download_result["error"])
-                return ConversationHandler.END
+                self.update.message.reply_text(View.error_downloading_track(track_download_result["error"]["song_name"]))
+                continue
 
-            cover_path = track_download_result["cover_path"]
-            music_path = track_download_result["music_path"]
-            self.context.bot.delete_message(chat_id, wait_message_id)
-            self.update.message.reply_photo(open(cover_path, "rb"))
+            if spotify_link_type == "track":
+                cover_path = track_download_result["cover_path"]
+                self.update.message.reply_photo(open(cover_path, "rb"))
             File().remove_file(cover_path)
-            self.context.bot.send_audio(chat_id, open(music_path, "rb"))
+
+            music_path = track_download_result["music_path"]
+            self.update.message.reply_audio(open(music_path, "rb"))
             File().remove_file(music_path)
-            return ConversationHandler.END
+        
+        for message_id in self.context.user_data.get("wait_messages"):
+            self.context.bot.delete_message(self.update.message["chat"]["id"], message_id)
+            self.context.user_data.get("wait_messages").remove(message_id)
+        return ConversationHandler.END
 
-        if spotify_link_type == "album":
-            album_links = Spotify().album(link)
-            for album_link in album_links:
-                track_download_result = Spotify().download_track(album_link)
-                if track_download_result["error"] is not None:
-                    self.update.message.reply_text(track_download_result["error"])
-                    continue
-
-                File().remove_file(track_download_result["cover_path"])
-                music_path = track_download_result["music_path"]
-                self.context.bot.send_audio(chat_id, open(music_path, "rb"))
-                File().remove_file(music_path)
-            self.context.bot.delete_message(chat_id, wait_message_id)
-            self.update.message.reply_text(View.album_done())
-            return ConversationHandler.END
-
-        if spotify_link_type == "artist":
-            artist_top_tracks_links = Spotify().top_tracks_artist(link)
-            for artist_top_tracks_link in artist_top_tracks_links:
-                track_download_result = Spotify().download_track(artist_top_tracks_link)
-                if track_download_result["error"] is not None:
-                    self.update.message.reply_text(track_download_result["error"])
-                    continue
-
-                File().remove_file(track_download_result["cover_path"])
-                music_path = track_download_result["music_path"]
-                self.context.bot.send_audio(chat_id, open(music_path, "rb"))
-                File().remove_file(music_path)
-            self.context.bot.delete_message(chat_id, wait_message_id)
-            self.update.message.reply_text(View.artist_done())
-            return ConversationHandler.END
-
-        if spotify_link_type == "playlist":
-            playlist_tracks_links = Spotify().playlist(link)
-            get_count_message = self.update.message.reply_text(View.receive_count_of_playlist_songs_to_send(len(playlist_tracks_links)))
-            self.context.user_data["playlist_tracks_links"] = playlist_tracks_links
-            self.context.user_data["chat_id"] = chat_id
-            self.context.user_data["wait_message_id"] = wait_message_id
-            self.context.user_data["second_wait_message_id"] = get_count_message["message_id"]
-            return 1
 
     def send_playlist(self):
         count = self.update.message.text
-        chat_id = self.context.user_data["chat_id"]
-        first_wait_message_id = self.context.user_data["wait_message_id"]
-        second_wait_message_id = self.context.user_data["second_wait_message_id"]
+        chat_id = self.update.message["chat"]["id"]
         if not is_numeric(count) or int(count) <= 0:
-            self.context.bot.delete_message(chat_id, first_wait_message_id)
-            self.context.bot.delete_message(chat_id, second_wait_message_id)
-            self.update.message.reply_text(View.not_valid_number())
-            return ConversationHandler.END
+            for message_id in self.context.user_data.get("wait_messages"):
+                self.context.bot.delete_message(chat_id, message_id)
+                self.context.user_data["wait_messages"].remove(message_id)
+            return ConversationHandler.END            
 
-        playlist_tracks_links = (self.context.user_data["playlist_tracks_links"])[:int(count)]
-        for playlist_tracks_link in playlist_tracks_links:
-            track_download_result = Spotify().download_track(playlist_tracks_link)
+        chosen_spotify_links = (self.context.user_data["spotify_links"])[:int(count)]
+        
+        for spotify_link in chosen_spotify_links:
+            track_download_result = Spotify().download_track(spotify_link)
+            
             if track_download_result["error"] is not None:
-                self.update.message.reply_text(track_download_result["error"])
+                self.update.message.reply_text(View.error_downloading_track(track_download_result["error"]["song_name"]))
                 continue
 
             File().remove_file(track_download_result["cover_path"])
             music_path = track_download_result["music_path"]
-            self.context.bot.send_audio(self.context.user_data["chat_id"], open(music_path, "rb"))
+            self.context.bot.send_audio(chat_id, open(music_path, "rb"))
             File().remove_file(music_path)
-        self.context.bot.delete_message(chat_id, first_wait_message_id)
-        self.context.bot.delete_message(chat_id, second_wait_message_id)
+        
+        for message_id in self.context.user_data.get("wait_messages"):
+            self.context.bot.delete_message(chat_id, message_id)
+            self.context.user_data["wait_messages"].remove(message_id)
+
         self.update.message.reply_text(View.playlist_done())
         return ConversationHandler.END
+
 
     def start(self):
         Logger(self.context, self.update).log_info("start")
@@ -117,15 +132,9 @@ class BotController:
 
     def cancel(self):
         Logger(self.context, self.update).log_info("cancel")
-        try:
-            self.context.bot.delete_message(self.context.user_data["chat_id"], self.context.user_data["wait_message_id"])
-        except:
-            pass
-
-        try:
-            self.context.bot.delete_message(self.context.user_data["chat_id"], self.context.user_data["second_wait_message_id"])
-        except:
-            pass
+        for message_id in self.context.user_data.get("wait_messages"):
+            self.context.bot.delete_message(self.update.message["chat"]["id"], message_id)
+            self.context.user_data["wait_messages"].remove(message_id)
 
         self.update.message.reply_text(View.cancel())
         return ConversationHandler.END
@@ -136,7 +145,8 @@ class BotController:
 
     def search_track(self):
         Logger(self.context, self.update).log_info("search_track")
-        tracks = Spotify().search_track(self.update.message.text)
+        tracks = Deezer().search_track(self.update.message.text)
+        
         if not is_not_empty(tracks):
             self.update.message.reply_text(View.no_results())
             return ConversationHandler.END
@@ -160,10 +170,10 @@ class BotController:
         chat_id = self.update.message["chat"]["id"]
         wait_message = self.update.message.reply_text(View().wait())
         wait_message_id = wait_message["message_id"]
-        track_download_result = Spotify().download_track(tracks[int(self.update.message.text) - 1]["link"])
+        track_download_result = Deezer().download_track((tracks[int(self.update.message.text) - 1])["id"])
         if track_download_result["error"] is not None:
             self.context.bot.delete_message(chat_id, wait_message_id)
-            self.update.message.reply_text(track_download_result["error"])
+            self.update.message.reply_text(View.error_downloading_track(track_download_result["error"]["song_name"]))
             return ConversationHandler.END
 
         cover_path = track_download_result["cover_path"]
