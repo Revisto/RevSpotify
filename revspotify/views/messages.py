@@ -80,3 +80,4 @@ class View:
     @staticmethod
     def forbidden_spotify_or_spotify_is_high_and_racist_again():
         message = "خب, اسپاتیفای دوباره مست و نژادپرست شده و دسترسی ما رو بن کرده. به ادمین پیام بدید."
+        return message
