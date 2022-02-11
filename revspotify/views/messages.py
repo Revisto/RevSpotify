@@ -1,5 +1,3 @@
-from random import choice
-
 class View:
     @staticmethod
     def welcome():
@@ -24,9 +22,7 @@ class View:
 
     @staticmethod
     def wait():
-        adverbs = ["اوکی!", "حله!", "عالی!", "صبر کن!"]
-        adverb = choice(adverbs)
-        message = f"{adverb} الان میفرستم."
+        message = "صبر کن, الان میفرستم."
         return message
 
     @staticmethod
@@ -51,8 +47,7 @@ class View:
 
     @staticmethod
     def cancel():
-        messages = ["باش!", "باشه!", "حله!", "اوکی!",]
-        message = choice(messages)
+        message = "کنسل گردید :)"
         return message
     
     @staticmethod
@@ -78,26 +73,6 @@ class View:
         return message
 
     @staticmethod
-    def not_admin():
-        message = "تو ادمین نیستی, ادمین‌نما!"
-        return message
-
-    @staticmethod
-    def send_message_from_admin_intro():
-        message = "خب, درخواستتون رو اینجوری بنویسید:\n chat_id\n message\n reply_to_message_id"
-        return message
-
-    @staticmethod
-    def sent_message_from_admin():
-        message = "پیام شما ارسال شد!"
-        return message
-
-    @staticmethod
-    def error_sending_message_from_admin():
-        message = "متاسفانه پیام شما ارسال نشد!"
-        return message
-
-    @staticmethod
     def error_downloading_track(song_name):
         message = f"آهنگ {song_name} پیدا نشد!"
         return message
@@ -105,4 +80,3 @@ class View:
     @staticmethod
     def forbidden_spotify_or_spotify_is_high_and_racist_again():
         message = "خب, اسپاتیفای دوباره مست و نژادپرست شده و دسترسی ما رو بن کرده. به ادمین پیام بدید."
-        return message
