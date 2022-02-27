@@ -1,0 +1,36 @@
+name: RevSpotify Application
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.10"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r revspotify/requirements.txt
+    - name: Set up .env file
+      run: |
+        touch .env
+        echo TOKEN="229584564:ZAFz1lalAD9ZmZF956EnvEXAb0Q65CCRNpl" >> .env
+        echo LOG_CHAT_ID="229584564" >> .env
+        echo BOT_USERNAME="USERNAMEBOT" >> .env
+        echo DEEZER_ARL=${{ secrets.DEEZER_ARL }} >> .env
+        cat .env
+    - name: Test with pytest
+      working-directory: revspotify
+      run: |
+        pip install pytest
+        pytest -vv tests/test.py
