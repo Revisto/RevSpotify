@@ -2,19 +2,6 @@ import logging
 
 from config import Config
 
-def log(func):
-    def wrapper(*args, **kwargs):
-        # if bot is mentioned, log the message
-        bot_username = Config.BOT_USERNAME
-        update = args[0]
-        reply_to_message = update.message.reply_to_message
-        reply_to_message_from_user = {}
-        if reply_to_message is not None:
-            reply_to_message_from_user = reply_to_message.from_user.to_dict()
-        if reply_to_message_from_user.get("username") == bot_username or f"@{bot_username}" in update.message.text:
-            Logger(args[1], args[0]).log_info("mentioned")
-        return func(*args, **kwargs)
-    return wrapper 
 
 class Logger:
     def __init__(self, context, update):

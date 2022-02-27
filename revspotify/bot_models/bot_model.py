@@ -1,12 +1,14 @@
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
+from deezer_downloader.deezer import Deezer404Exception
+from spotify_downloader.exceptions import SpotifyException
+import spotify_downloader
+from spotify_downloader.oauth2 import SpotifyClientCredentials
 import requests
 from youtube_search import YoutubeSearch
 import yt_dlp
 import eyed3.id3
 import eyed3
 import re
- 
+
 from time import strftime, gmtime
 from os import remove
 
@@ -15,8 +17,8 @@ class Spotify:
     def __init__(self):
         self.client_id = "a145db3dcd564b9592dacf10649e4ed5"
         self.client_secret = "389614e1ec874f17b8c99511c7baa2f6"
-        
-        self.spotify = spotipy.Spotify(
+
+        self.spotify = spotify_downloader.Spotify(
             client_credentials_manager=SpotifyClientCredentials(
                 client_id=self.client_id,
                 client_secret=self.client_secret,
@@ -33,16 +35,21 @@ class Spotify:
 
         return seconds
 
-    def download_track(self, link):
-        results = self.spotify.track(link)
-        deezer_results = Deezer().search_and_download_track(results)
+    def download_track(self, link, unique_name_suffix):
+        try:
+            results = self.spotify.track(link)
+        except AttributeError:
+            return {"error": "Forbidden"}
+        except SpotifyException:
+            return {"error": "Invalid link"}
+        deezer_results = Deezer().search_and_download_track(results, unique_name_suffix)
         if deezer_results["error"] is None:
             return deezer_results
-        
-        youtube_results = self.download_track_from_youtube(results)
+
+        youtube_results = self.download_track_from_youtube(results, unique_name_suffix)
         return youtube_results
 
-    def download_track_from_youtube(self, results):
+    def download_track_from_youtube(self, results, unique_name_suffix=None):
         song = results["name"]
         artist = results["artists"][0]["name"]
         YTSEARCH = str(song + " " + artist)
@@ -51,7 +58,7 @@ class Spotify:
         realese_date = int(results["album"]["release_date"][:4])
 
         if len(artistfinder) > 1:
-            fetures = "( Ft."
+            fetures = " (Ft."
             for lomi in range(0, len(artistfinder)):
                 try:
                     if lomi < len(artistfinder) - 2:
@@ -68,18 +75,19 @@ class Spotify:
         millis = results["duration_ms"]
         millis = int(millis)
         spotify_track_seconds = millis / 1000
-
         trackname = song + fetures
-        # Download Cover
-        response = requests.get(results["album"]["images"][0]["url"])
-        DIRCOVER = "static/covers/" + trackname + ".png"
-        file = open(DIRCOVER, "wb")
-        file.write(response.content)
-        file.close()
+        trackname = trackname.replace("/", "-").replace("\\", "-")
+        if unique_name_suffix is not None:
+            cover_path = f"static/covers/{trackname}-{unique_name_suffix}.png"
+            music_path = f"static/songs/{trackname}-{unique_name_suffix}.mp3"
+        else:
+            cover_path = f"static/covers/{trackname}.png"
+            music_path = f"static/songs/{trackname}.mp3"
+
         # search for music on youtube
-        results = list(YoutubeSearch(str(YTSEARCH)).to_dict())
+        yt_results = list(YoutubeSearch(str(YTSEARCH)).to_dict())
         LINKASLI = ""
-        for URLSSS in results:
+        for URLSSS in yt_results:
             timeyt = URLSSS["duration"]
             youtube_video_seconds = self.convert_youtube_time_duration_to_seconds(
                 timeyt
@@ -95,7 +103,7 @@ class Spotify:
             # PERMANENT options
             "format": "bestaudio/best",
             "keepvideo": False,
-            "outtmpl": f"static/songs/{trackname}.*",
+            "outtmpl": music_path,
             "postprocessors": [
                 {
                     "key": "FFmpegExtractAudio",
@@ -105,39 +113,48 @@ class Spotify:
             ],
         }
 
+        # Download Cover
+        response = requests.get(results["album"]["images"][0]["url"])
+        file = open(cover_path, "wb")
+        file.write(response.content)
+        file.close()
+
         with yt_dlp.YoutubeDL(options) as mp3:
             mp3.download([YTLINK])
 
-        aud = eyed3.load(f"static/songs/{trackname}.mp3")
+        aud = eyed3.load(music_path)
         aud.tag.artist = artist
         aud.tag.album = album
         aud.tag.album_artist = artist
         aud.tag.title = trackname
         aud.tag.year = realese_date
-        aud.tag.images.set(
-            3, open(f"static/covers/{trackname}.png", "rb").read(), "image/png"
-        )
+        aud.tag.images.set(3, open(cover_path, "rb").read(), "image/png")
         aud.tag.save()
         return {
-            "cover_path": f"static/covers/{trackname}.png",
-            "music_path": f"static/songs/{trackname}.mp3",
+            "cover_path": cover_path,
+            "music_path": music_path,
             "name": trackname,
             "error": None,
         }
 
     def search_track(self, text):
-        """ Not working, need to fix """
+        """Not working, need to fix"""
 
         results = self.spotify.search(text, limit=7, type="track")
         links = list()
         number = 1
         for track in results["tracks"]["items"]:
             links.append(
-                {"track_number": number,
-                "link": track["external_urls"]["spotify"], 
-                "song_name": track["name"],
-                "artist": ", ".join([artist["name"] for artist in track["artists"]]),
-                "duration": strftime('%M:%S', gmtime(int(track["duration_ms"]) / 1000)),
+                {
+                    "track_number": number,
+                    "link": track["external_urls"]["spotify"],
+                    "song_name": track["name"],
+                    "artist": ", ".join(
+                        [artist["name"] for artist in track["artists"]]
+                    ),
+                    "duration": strftime(
+                        "%M:%S", gmtime(int(track["duration_ms"]) / 1000)
+                    ),
                 }
             )
             number += 1
@@ -145,29 +162,81 @@ class Spotify:
         return links
 
     def album(self, link):
-        results = self.spotify.album_tracks(link)
+        try:
+            results = self.spotify.album_tracks(link)
+        except:
+            return None
+
         tracks = list()
         for track in results["items"]:
             tracks.append(track["external_urls"]["spotify"])
 
         return tracks
 
-    def top_tracks_artist(self, link):
-        results = self.spotify.artist_top_tracks(link)
+    def top_tracks_artist(self, link, unique_name_suffix):
+        try:
+            results = self.spotify.artist_top_tracks(link)
+        except:
+            return None
+
         top_tracks = list()
         for top_track in results["tracks"]:
             top_tracks.append(top_track["external_urls"]["spotify"])
-        return top_tracks
+        if results["artist"]["images"] == []:
+            cover_path = None
+        else:
+            cover_path = (
+                f"static/covers/{results['artist']['name']}-{unique_name_suffix}.png"
+            )
+            response = requests.get(results["artist"]["images"][0]["url"])
+            file = open(cover_path, "wb")
+            file.write(response.content)
+            file.close()
 
-    def playlist(self, link):
-        results = self.spotify.playlist_tracks(link)
+        error = None
+        if top_tracks == []:
+            error = "No tracks in artist's top tracks"
+
+        return {
+            "spotify_links": top_tracks,
+            "cover": cover_path,
+            "name": results["artist"]["name"],
+            "genres": results["artist"]["genres"],
+            "error": error,
+        }
+
+    def playlist(self, link, unique_name_suffix):
+        try:
+            results = self.spotify.playlist_tracks(link)
+        except:
+            return None
+
+        error = None
         playlist_tracks = list()
-        for track in results["items"]:
+        for track in results["tracks"]["items"]:
             playlist_tracks.append(track["track"]["external_urls"]["spotify"])
-        return playlist_tracks
+
+        if results["images"] == []:
+            cover_path = None
+        else:
+            cover_path = f"static/covers/{results['name']}-{unique_name_suffix}.png"
+            response = requests.get(results["images"][0]["url"])
+            file = open(cover_path, "wb")
+            file.write(response.content)
+            file.close()
+
+        if playlist_tracks == []:
+            error = "No tracks in playlist"
+
+        return {
+            "spotify_links": playlist_tracks,
+            "cover": cover_path,
+            "name": results["name"],
+            "error": error,
+        }
 
     def analyse_spotify_link(self, text):
-        spotify_regex = "(\/(track|playlist|artist|album|spotify|download)@revspotifybot )?(https?://)?(www\.)?(open.spotify)\.(com)/(track|album|artist|playlist)/?([^&=%\?]{22}).+"
+        spotify_regex = r"(\/(track|playlist|artist|album|spotify|download)@revspotifybot )?(https?:\/\/)?(www\.)?(open.spotify)\.(com)\/(track|album|artist|playlist)\/([^ \n&\.=%\?]{20,23})"
         spotify_regex_match = re.findall(spotify_regex, text)
         if spotify_regex_match == list():
             return False
@@ -188,6 +257,7 @@ class File:
 class Deezer:
     def __init__(self):
         from deezer_downloader import deezer
+
         self.deezer = deezer
 
     def search_track(self, text):
@@ -196,21 +266,29 @@ class Deezer:
         number = 1
         for track in results:
             links.append(
-                {"track_number": number,
-                "id": track["id"], 
-                "song_name": track["title"],
-                "artist": track["artist"],
-                "duration": strftime('%M:%S', gmtime(int(track["duration"]))),
+                {
+                    "track_number": number,
+                    "id": track["id"],
+                    "song_name": track["title"],
+                    "artist": track["artist"],
+                    "duration": strftime("%M:%S", gmtime(int(track["duration"]))),
                 }
             )
             number += 1
 
         return links
 
-    def download_track(self, track_id):
-        song = self.deezer.get_song_infos_from_deezer_website(track_id)
-        music_path = self.deezer.download_song(song)["music_path"]
-        cover_path = self.deezer.download_cover(song)["cover_path"]
+    def download_track(self, track_id, unique_name_suffix):
+        try:
+            song = self.deezer.get_song_infos_from_deezer_website(track_id)
+        except Deezer404Exception:
+            return {"error": "Track not found"}
+        music_path = self.deezer.download_song(
+            song, unique_name_suffix=unique_name_suffix
+        )["music_path"]
+        cover_path = self.deezer.download_cover(
+            song, unique_name_suffix=unique_name_suffix
+        )["cover_path"]
 
         return {
             "cover_path": cover_path,
@@ -218,8 +296,7 @@ class Deezer:
             "error": None,
         }
 
-
-    def search_and_download_track(self, results):
+    def search_and_download_track(self, results, unique_name_suffix):
         song = results["name"]
         artist = results["artists"][0]["name"]
         artistfinder = results["artists"]
@@ -244,7 +321,6 @@ class Deezer:
         search_query = f"{song} {artist} {fetures}"
         search_query = " ".join(search_query.split())
 
-
         search_results = self.deezer.deezer_search(search_query)[:10]
         if search_results == list():
             return {"error": {"song_name": search_query}}
@@ -253,11 +329,17 @@ class Deezer:
             if abs(int(spotify_track_seconds) - search_results[i]["duration"]) <= 1:
                 track = search_results[i]
                 break
-            
-        track_details = self.deezer.get_song_infos_from_deezer_website(track["id"])
-        music_path = self.deezer.download_song(track_details)["music_path"]
-        cover_path = self.deezer.download_cover(track_details)["cover_path"]
 
+        if "track" not in locals():
+            return {"error": {"song_name": search_query}}
+
+        track_details = self.deezer.get_song_infos_from_deezer_website(track["id"])
+        music_path = self.deezer.download_song(track_details, unique_name_suffix)[
+            "music_path"
+        ]
+        cover_path = self.deezer.download_cover(track_details, unique_name_suffix)[
+            "cover_path"
+        ]
 
         return {
             "cover_path": cover_path,
@@ -265,3 +347,14 @@ class Deezer:
             "name": search_query,
             "error": None,
         }
+
+
+class TelegramAssistant:
+    def __init__(self, context, update):
+        self.context = context
+        self.update = update
+
+    def delete_wait_messages(self, chat_id):
+        for message_id in self.context.user_data.get("wait_messages")[:]:
+            self.context.bot.delete_message(chat_id, message_id)
+            self.context.user_data["wait_messages"].remove(message_id)

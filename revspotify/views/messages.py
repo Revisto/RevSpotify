@@ -1,3 +1,7 @@
+from time import strftime
+from telegram import message
+
+
 class View:
     @staticmethod
     def welcome():
@@ -73,11 +77,34 @@ class View:
         return message
 
     @staticmethod
-    def error_downloading_track(song_name):
-        message = f"آهنگ {song_name} پیدا نشد!"
+    def error_downloading_track(song_name=None):
+        if song_name is None:
+            message = f"مشکلی در دانلود این آهنگ پیش اومده!"
+        else:
+            message = f"آهنگ {song_name} پیدا نشد!"
         return message
 
     @staticmethod
     def forbidden_spotify_or_spotify_is_high_and_racist_again():
         message = "خب, اسپاتیفای دوباره مست و نژادپرست شده و دسترسی ما رو بن کرده. به ادمین پیام بدید."
+        return message
+
+    @staticmethod
+    def not_found_link():
+        message = "لینک نامعتبر است :("
+        return message
+
+    @staticmethod
+    def playlist_is_empty():
+        message = "این پلی لیست خالی است :("
+        return message
+
+    @staticmethod
+    def artist_caption(artist_name, genres: list):
+        message = f"{artist_name}\n{' - '.join([genre.title() for genre in genres])}"
+        return message
+
+    @staticmethod
+    def unexpected_error():
+        message = "متاسفم، مشکلی پیش اومده. به ادمین پیام بدید."
         return message

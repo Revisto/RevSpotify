@@ -3,23 +3,21 @@ from telegram import Update
 from telegram.ext import CallbackContext
 
 from controllers.bot_controller import BotController
-from logger import log
 
 TASK, CATEGORY = range(2)
 
 
 def start_and_help(update: Update, context: CallbackContext) -> int:
     return BotController(update, context).start()
-    
-@log
-def query(update: Update, context: CallbackContext) -> int:
-    return BotController(update, context).query()
-
-def send_playlis(update: Update, context: CallbackContext) -> int:
-    return BotController(update, context).send_playlist()
 
 def cancel(update: Update, context: CallbackContext) -> int:
     return BotController(update, context).cancel()
+
+def query(update: Update, context: CallbackContext) -> int:
+    return BotController(update, context).query()
+
+def send_playlist(update: Update, context: CallbackContext) -> int:
+    return BotController(update, context).send_playlist()
 
 def search_intro(update: Update, context: CallbackContext) -> int:
     return BotController(update, context).search_intro()
@@ -27,14 +25,5 @@ def search_intro(update: Update, context: CallbackContext) -> int:
 def search_track(update: Update, context: CallbackContext) -> int:
     return BotController(update, context).search_track()
 
-def search_track(update: Update, context: CallbackContext) -> int:
-    return BotController(update, context).search_track()
-
 def choose_from_search_results(update: Update, context: CallbackContext) -> int:
     return BotController(update, context).choose_from_search_results()
-
-def send_message_from_admin_intro_and_auth(update: Update, context: CallbackContext) -> int:
-    return BotController(update, context).send_message_from_admin_intro_and_auth()
-
-def send_message_from_admin_data(update: Update, context: CallbackContext) -> int:
-    return BotController(update, context).send_message_from_admin_data()
