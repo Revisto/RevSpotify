@@ -27,8 +27,10 @@ jobs:
         echo TOKEN="229584564:ZAFz1lalAD9ZmZF956EnvEXAb0Q65CCRNpl" >> .env
         echo LOG_CHAT_ID="229584564" >> .env
         echo BOT_USERNAME="USERNAMEBOT" >> .env
-        echo DEEZER_ARL=${{ secrets.DEEZER_ARL }} >> .env
+        echo DEEZER_ARL=${DEEZER_ARL} >> .env
         cat .env
+      env: 
+        DEEZER_ARL: ${{ secrets.DEEZER_ARL }}
     - name: Test with pytest
       working-directory: revspotify
       run: |
