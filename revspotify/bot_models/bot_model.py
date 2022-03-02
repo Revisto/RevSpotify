@@ -105,12 +105,13 @@ class Spotify:
             print("difference: ", this_duration_diff)
             print(f"youtube-duration: {yt_result['duration']} | spotify-duration: {spotify_track_seconds}")
             print(f"youtube-views: {yt_result['views']} | best-views: {best_result['views']}")
-            print(f"is diff less than the best {this_duration_diff < best_result['duration']}")
+            print(f"is diff less than the best {this_duration_diff < abs(best_result['duration'] - spotify_track_seconds)}")
             print(f"are diffs the same {this_duration_diff == best_result['views']}")
             print(f"is views more {yt_result['views'] > best_result['views']}")
             print("--------------")
             if this_duration_diff <= 4:
-                if (this_duration_diff < abs(best_result["duration"] - spotify_track_seconds)) or (this_duration_diff == best_result["views"] and yt_result["views"] > best_result["views"]):
+                duration_diff_with_the_best = abs(best_result["duration"] - spotify_track_seconds)
+                if (this_duration_diff < duration_diff_with_the_best) or (this_duration_diff == duration_diff_with_the_best and yt_result["views"] > best_result["views"]):
                     best_result = yt_result
 
         if best_result.get("found") is False:
