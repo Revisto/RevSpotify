@@ -1,14 +1,14 @@
-eyeD3
+eyeD3==0.9.6
 requests
-spotipy
-yt_dlp
-youtube_search
+spotipy==2.19.0
+yt_dlp==2022.1.21
+youtube_search==2.1.0
 python-telegram-bot
 python-dotenv
 validator_collection
-py-deezer
+py-deezer==1.1.4.post1
 pycryptodome==3.12.0
-youtube_search
+youtube_search==2.1.0
 lorem
 names
 
