@@ -1,3 +1,4 @@
+from cmath import inf
 from deezer_downloader.deezer import Deezer404Exception
 from spotify_downloader.exceptions import SpotifyException
 import spotify_downloader
@@ -87,14 +88,18 @@ class Spotify:
         # search for music on youtube
         yt_results = list(YoutubeSearch(str(YTSEARCH)).to_dict())
         LINKASLI = ""
+        best_duration_diff = float("inf")
         for URLSSS in yt_results:
             timeyt = URLSSS["duration"]
             youtube_video_seconds = self.convert_youtube_time_duration_to_seconds(
                 timeyt
             )
-            if abs(youtube_video_seconds - spotify_track_seconds) <= 4:
+            this_duration_diff = abs(youtube_video_seconds - spotify_track_seconds)
+            if abs(youtube_video_seconds - spotify_track_seconds) <= 4 and this_duration_diff < best_duration_diff:
                 LINKASLI = URLSSS["url_suffix"]
+                best_duration_diff = this_duration_diff
                 break
+
         if LINKASLI == "":
             return {"error": {"song_name": song}}
 
