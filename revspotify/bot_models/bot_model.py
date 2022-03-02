@@ -100,7 +100,6 @@ class Spotify:
             if abs(youtube_video_seconds - spotify_track_seconds) <= 4 and this_duration_diff < best_duration_diff:
                 LINKASLI = URLSSS["url_suffix"]
                 best_duration_diff = this_duration_diff
-                break
 
         if LINKASLI == "":
             return {"error": {"song_name": song}}
