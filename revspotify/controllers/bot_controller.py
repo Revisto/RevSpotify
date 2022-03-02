@@ -90,7 +90,8 @@ class BotController:
                     artist_results is not None and
                     artist_results.get("cover") is not None
                 ):
-                    File().remove_file(spotify_links["cover"])
+                    #File().remove_file(spotify_links["cover"])
+                    pass
                 return ConversationHandler.END
 
             spotify_links = artist_results["spotify_links"]
@@ -101,7 +102,7 @@ class BotController:
             )
             if cover_path is not None:
                 self.update.message.reply_photo(open(cover_path, "rb"), caption=caption)
-                File().remove_file(cover_path)
+                #File().remove_file(cover_path)
             else:
                 self.update.message.reply_text(chat_id, caption=caption)
 
@@ -133,7 +134,7 @@ class BotController:
                     self.update.message.reply_photo(
                         open(cover_path, "rb"), caption=caption
                     )
-                    File().remove_file(cover_path)
+                    #File().remove_file(cover_path)
 
                 return ConversationHandler.END
 
@@ -141,7 +142,7 @@ class BotController:
             playlist_photo_with_caption_to_get_count_of_the_playlist = (
                 self.update.message.reply_photo(open(cover_path, "rb"), caption=caption)
             )
-            File().remove_file(cover_path)
+            #File().remove_file(cover_path)
             self.context.user_data["spotify_links"] = spotify_links
             self.context.user_data["playlist_photo_message"] = {
                 "message_id": playlist_photo_with_caption_to_get_count_of_the_playlist.message_id,
@@ -175,11 +176,11 @@ class BotController:
             cover_path = track_download_result["cover_path"]
             if spotify_links.index(spotify_link) == 0 and spotify_link_type != "artist":
                 self.update.message.reply_photo(open(cover_path, "rb"))
-            File().remove_file(cover_path)
+            #File().remove_file(cover_path)
 
             music_path = track_download_result["music_path"]
             self.context.bot.send_audio(chat_id, open(music_path, "rb"))
-            File().remove_file(music_path)
+            #File().remove_file(music_path)
 
         TelegramAssistant(self.context, self.update).delete_wait_messages(chat_id)
 
@@ -227,10 +228,10 @@ class BotController:
                     self.update.message.reply_text(View.unexpected_error())
                 continue
 
-            File().remove_file(track_download_result["cover_path"])
+            #File().remove_file(track_download_result["cover_path"])
             music_path = track_download_result["music_path"]
             self.context.bot.send_audio(chat_id, open(music_path, "rb"))
-            File().remove_file(music_path)
+            #File().remove_file(music_path)
 
         TelegramAssistant(self.context, self.update).delete_wait_messages(chat_id)
 
@@ -299,7 +300,7 @@ class BotController:
         music_path = track_download_result["music_path"]
         self.context.bot.delete_message(chat_id, wait_message_id)
         self.update.message.reply_photo(open(cover_path, "rb"))
-        File().remove_file(cover_path)
+        #File().remove_file(cover_path)
         self.context.bot.send_audio(chat_id, open(music_path, "rb"))
-        File().remove_file(music_path)
+        #File().remove_file(music_path)
         return ConversationHandler.END
