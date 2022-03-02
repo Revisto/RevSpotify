@@ -1179,79 +1179,23 @@ def test_search_track_with_valid_input():
     update_mock = MagicMock()
     context_mock = MagicMock()
     Faker().set_user_data_approach(context_mock)
-    Faker().generate_message_data(update_mock, text="Linkin Park")
+    Faker().generate_message_data(update_mock, text="Bomrani To Kojayi")
     update_mock.message.reply_text.return_value = Faker().return_message_id_approach()
     output = search_track(update_mock, context_mock)
     expected_tracks = [
         {
             "track_number": 1,
-            "id": "676183",
-            "song_name": "In the End",
-            "artist": "Linkin Park",
-            "duration": "03:36",
+            "id": "619289672",
+            "song_name": "To Kojayi?",
+            "artist": "Bomrani",
+            "duration": "02:33",
         },
         {
             "track_number": 2,
-            "id": "677232",
-            "song_name": "Numb",
-            "artist": "Linkin Park",
-            "duration": "03:05",
-        },
-        {
-            "track_number": 3,
-            "id": "676847",
-            "song_name": "What I've Done",
-            "artist": "Linkin Park",
-            "duration": "03:25",
-        },
-        {
-            "track_number": 4,
-            "id": "14628999",
-            "song_name": "Faint",
-            "artist": "Linkin Park",
-            "duration": "02:42",
-        },
-        {
-            "track_number": 5,
-            "id": "676171",
-            "song_name": "Crawling",
-            "artist": "Linkin Park",
-            "duration": "03:28",
-        },
-        {
-            "track_number": 6,
-            "id": "677219",
-            "song_name": "Breaking the Habit",
-            "artist": "Linkin Park",
-            "duration": "03:16",
-        },
-        {
-            "track_number": 7,
-            "id": "676162",
-            "song_name": "One Step Closer",
-            "artist": "Linkin Park",
-            "duration": "02:37",
-        },
-        {
-            "track_number": 8,
-            "id": "676159",
-            "song_name": "Papercut",
-            "artist": "Linkin Park",
-            "duration": "03:04",
-        },
-        {
-            "track_number": 9,
-            "id": "37734411",
-            "song_name": "BURN IT DOWN",
-            "artist": "Linkin Park",
-            "duration": "03:50",
-        },
-        {
-            "track_number": 10,
-            "id": "676844",
-            "song_name": "Shadow of the Day",
-            "artist": "Linkin Park",
-            "duration": "04:50",
+            "id": "900376672",
+            "song_name": "To Kojayi? Live (Where Are You?) (Live)",
+            "artist": "Bomrani",
+            "duration": "02:59",
         },
     ]
 
