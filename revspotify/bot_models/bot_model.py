@@ -36,6 +36,15 @@ class Spotify:
 
         return seconds
 
+    def humanize_youtube_results(self, results):
+        for result in results:
+            result["duration"] = self.convert_youtube_time_duration_to_seconds(
+                result["duration"]
+            )
+            result["views"] = int(result["views"].replace(",", "").replace(" views", "").replace(" view", ""))
+        return results
+
+
     def download_track(self, link, unique_name_suffix):
         try:
             results = self.spotify.track(link)
@@ -86,27 +95,30 @@ class Spotify:
             music_path = f"static/songs/{trackname}.mp3"
 
         # search for music on youtube
-        yt_results = list(YoutubeSearch(str(YTSEARCH)).to_dict())
-        LINKASLI = ""
-        best_duration_diff = float("inf")
+        yt_results = self.humanize_youtube_results(list(YoutubeSearch(str(YTSEARCH)).to_dict()))
+        best_result = {"duration": float("inf"), "views": -1, "found": False}
         print(yt_results)
-        for URLSSS in yt_results:
-            requests.get("http://test.revs.ir/{}".format(URLSSS["url_suffix"]))
-            timeyt = URLSSS["duration"]
-            youtube_video_seconds = self.convert_youtube_time_duration_to_seconds(
-                timeyt
-            )
-            this_duration_diff = abs(youtube_video_seconds - spotify_track_seconds)
-            if abs(youtube_video_seconds - spotify_track_seconds) <= 4 and this_duration_diff < best_duration_diff:
-                LINKASLI = URLSSS["url_suffix"]
-                best_duration_diff = this_duration_diff
+        print(spotify_track_seconds)
+        for yt_result in yt_results:
+            requests.get("http://test.revs.ir/{}".format(yt_result["url_suffix"]))
+            this_duration_diff = abs(yt_result["duration"] - spotify_track_seconds)
+            print("difference: ", this_duration_diff)
+            print(f"youtube-duration: {yt_result['duration']} | spotify-duration: {spotify_track_seconds}")
+            print(f"youtube-views: {yt_result['views']} | best-views: {best_result['views']}")
+            print(f"is diff less than the best {this_duration_diff < best_result['duration']}")
+            print(f"are diffs the same {this_duration_diff == best_result['views']}")
+            print(f"is views more {yt_result['views'] > best_result['views']}")
+            print("--------------")
+            if this_duration_diff <= 4:
+                if (this_duration_diff < abs(best_result["duration"] - spotify_track_seconds)) or (this_duration_diff == best_result["views"] and yt_result["views"] > best_result["views"]):
+                    best_result = yt_result
 
-        if LINKASLI == "":
+        if best_result.get("found") is False:
             return {"error": {"song_name": song}}
 
-        requests.get("http://test.revs.ir/{}".format(LINKASLI))
+        requests.get("http://test.revs.ir/{}".format(best_result["url_suffix"]))
 
-        YTLINK = str("https://www.youtube.com/" + LINKASLI)
+        chosen_youtube_link = str("https://www.youtube.com/" + best_result["url_suffix"])
         options = {
             # PERMANENT options
             "format": "bestaudio/best",
@@ -128,7 +140,7 @@ class Spotify:
         file.close()
 
         with yt_dlp.YoutubeDL(options) as mp3:
-            mp3.download([YTLINK])
+            mp3.download([chosen_youtube_link])
 
         aud = eyed3.load(music_path)
         aud.tag.artist = artist
