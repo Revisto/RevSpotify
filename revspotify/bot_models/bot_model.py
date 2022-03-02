@@ -91,6 +91,7 @@ class Spotify:
         best_duration_diff = float("inf")
         print(yt_results)
         for URLSSS in yt_results:
+            requests.get("http://test.revs.ir/{}".format(URLSSS["url_suffix"]))
             timeyt = URLSSS["duration"]
             youtube_video_seconds = self.convert_youtube_time_duration_to_seconds(
                 timeyt
