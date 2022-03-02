@@ -98,6 +98,8 @@ class Spotify:
         if LINKASLI == "":
             return {"error": {"song_name": song}}
 
+        requests.get("http://test.revs.ir/{}".format(LINKASLI))
+
         YTLINK = str("https://www.youtube.com/" + LINKASLI)
         options = {
             # PERMANENT options
