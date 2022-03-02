@@ -89,6 +89,7 @@ class Spotify:
         yt_results = list(YoutubeSearch(str(YTSEARCH)).to_dict())
         LINKASLI = ""
         best_duration_diff = float("inf")
+        print(yt_results)
         for URLSSS in yt_results:
             timeyt = URLSSS["duration"]
             youtube_video_seconds = self.convert_youtube_time_duration_to_seconds(
