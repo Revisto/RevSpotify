@@ -1,4 +1,3 @@
-from cmath import inf
 from deezer_downloader.deezer import Deezer404Exception
 from spotify_downloader.exceptions import SpotifyException
 import spotify_downloader
