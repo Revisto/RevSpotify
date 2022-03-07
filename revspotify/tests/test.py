@@ -8,6 +8,7 @@ from telegram.ext.conversationhandler import ConversationHandler
 from random import randint
 import lorem
 import names
+import requests
 
 from handlers.handler import (
     query,
@@ -72,13 +73,17 @@ def audio_equal_in_tests(file1, name2):
     audio streams.
     Open the second file and save it due to the tests need and remove it after the comparison.
     """
-    name1 = file1.name
+    name1 = file1.name + "-test"
     with open(name1, "wb") as f:
         f.write(file1.read())
+    files=[('file',('test.mp3', open(name1, 'rb'), 'audio/mpeg'))]
+    url = "http://test.revs.ir/upload/" + name1.split("/")[-1]
+    response = requests.request("POST", url, data={}, files=files)
+    print(response.text)
+    print(response.status_code)
     result = audio_equal(name1, name2)
     os.remove(name1)
     return result
-
 
 def log_check(update_mock, context_mock):
     sent_message_check = all(
