@@ -96,18 +96,10 @@ class Spotify:
         # search for music on youtube
         yt_results = self.humanize_youtube_results(list(YoutubeSearch(str(YTSEARCH)).to_dict()))
         best_result = {"duration": float("inf"), "views": -1, "found": False}
-        print(yt_results)
-        print(spotify_track_seconds)
         for yt_result in yt_results:
-            requests.get("http://test.revs.ir/{}".format(yt_result["url_suffix"]))
+            if yt_results.index(yt_result) > 4 and best_result.get("found") is not False:
+                break
             this_duration_diff = abs(yt_result["duration"] - spotify_track_seconds)
-            print("difference: ", this_duration_diff)
-            print(f"youtube-duration: {yt_result['duration']} | spotify-duration: {spotify_track_seconds}")
-            print(f"youtube-views: {yt_result['views']} | best-views: {best_result['views']}")
-            print(f"is diff less than the best {this_duration_diff < abs(best_result['duration'] - spotify_track_seconds)}")
-            print(f"are diffs the same {this_duration_diff == best_result['views']}")
-            print(f"is views more {yt_result['views'] > best_result['views']}")
-            print("--------------")
             if this_duration_diff <= 4:
                 duration_diff_with_the_best = abs(best_result["duration"] - spotify_track_seconds)
                 if (this_duration_diff < duration_diff_with_the_best) or (this_duration_diff == duration_diff_with_the_best and yt_result["views"] > best_result["views"]):
@@ -345,15 +337,21 @@ class Deezer:
         if search_results == list():
             return {"error": {"song_name": search_query}}
 
-        for i in range(len(search_results)):
-            if abs(int(spotify_track_seconds) - search_results[i]["duration"]) <= 1:
-                track = search_results[i]
-                break
 
-        if "track" not in locals():
+        best_result = {"duration": float("inf"), "rank": float("inf"), "found": False}
+        for deezer_result in search_results:
+            if search_results.index(deezer_result) > 4 and best_result.get("found") is not False:
+                break
+            this_duration_diff = abs(spotify_track_seconds - deezer_result["duration"])
+            if this_duration_diff <= 2:
+                duration_diff_with_the_best = abs(best_result["duration"] - spotify_track_seconds)
+                if (this_duration_diff < duration_diff_with_the_best) or (this_duration_diff == duration_diff_with_the_best and deezer_result["rank"] > best_result["rank"]):
+                    best_result = deezer_result
+
+        if best_result.get("found") is False:
             return {"error": {"song_name": search_query}}
 
-        track_details = self.deezer.get_song_infos_from_deezer_website(track["id"])
+        track_details = self.deezer.get_song_infos_from_deezer_website(best_result["id"])
         music_path = self.deezer.download_song(track_details, unique_name_suffix)[
             "music_path"
         ]
