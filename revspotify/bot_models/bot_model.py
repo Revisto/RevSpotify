@@ -340,6 +340,9 @@ class Deezer:
 
 
         best_result = {"duration": float("inf"), "rank": float("inf"), "found": False}
+        print("\n\n\n\n\n\n")
+        print(search_results)
+        print("\n\n\n\n\n\n")
         for deezer_result in search_results:
             if search_results.index(deezer_result) > 4 and best_result.get("found") is not False:
                 break
