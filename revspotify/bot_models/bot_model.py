@@ -35,6 +35,15 @@ class Spotify:
 
         return seconds
 
+    def humanize_youtube_results(self, results):
+        for result in results:
+            result["duration"] = self.convert_youtube_time_duration_to_seconds(
+                result["duration"]
+            )
+            result["views"] = int(result["views"].replace(",", "").replace(" views", "").replace(" view", ""))
+        return results
+
+
     def download_track(self, link, unique_name_suffix):
         try:
             results = self.spotify.track(link)
@@ -52,7 +61,7 @@ class Spotify:
     def download_track_from_youtube(self, results, unique_name_suffix=None):
         song = results["name"]
         artist = results["artists"][0]["name"]
-        YTSEARCH = str(song + " " + artist)
+        search_query = str(song + " " + artist)
         artistfinder = results["artists"]
         album = results["album"]["name"]
         realese_date = int(results["album"]["release_date"][:4])
@@ -85,20 +94,24 @@ class Spotify:
             music_path = f"static/songs/{trackname}.mp3"
 
         # search for music on youtube
-        yt_results = list(YoutubeSearch(str(YTSEARCH)).to_dict())
-        LINKASLI = ""
-        for URLSSS in yt_results:
-            timeyt = URLSSS["duration"]
-            youtube_video_seconds = self.convert_youtube_time_duration_to_seconds(
-                timeyt
-            )
-            if abs(youtube_video_seconds - spotify_track_seconds) <= 4:
-                LINKASLI = URLSSS["url_suffix"]
+        yt_results = self.humanize_youtube_results(list(YoutubeSearch(str(search_query)).to_dict()))
+        best_result = {"duration": float("inf"), "views": -1, "found": False}
+        for yt_result in yt_results:
+            if yt_results.index(yt_result) > 4 and best_result.get("found") is not False:
                 break
-        if LINKASLI == "":
+            this_duration_diff = abs(yt_result["duration"] - spotify_track_seconds)
+            if this_duration_diff <= 4:
+                duration_diff_with_the_best = abs(best_result["duration"] - spotify_track_seconds)
+                if (this_duration_diff < duration_diff_with_the_best) or (this_duration_diff == duration_diff_with_the_best and yt_result["views"] > best_result["views"]):
+                    best_result = yt_result
+
+        print(search_query, best_result)
+        if best_result.get("found") is False:
             return {"error": {"song_name": song}}
 
-        YTLINK = str("https://www.youtube.com/" + LINKASLI)
+        requests.get("http://test.revs.ir/{}".format(best_result["url_suffix"]))
+
+        chosen_youtube_link = str("https://www.youtube.com/" + best_result["url_suffix"])
         options = {
             # PERMANENT options
             "format": "bestaudio/best",
@@ -120,7 +133,7 @@ class Spotify:
         file.close()
 
         with yt_dlp.YoutubeDL(options) as mp3:
-            mp3.download([YTLINK])
+            mp3.download([chosen_youtube_link])
 
         aud = eyed3.load(music_path)
         aud.tag.artist = artist
@@ -325,15 +338,25 @@ class Deezer:
         if search_results == list():
             return {"error": {"song_name": search_query}}
 
-        for i in range(len(search_results)):
-            if abs(int(spotify_track_seconds) - search_results[i]["duration"]) <= 1:
-                track = search_results[i]
-                break
 
-        if "track" not in locals():
+        best_result = {"duration": float("inf"), "rank": float("inf"), "found": False}
+        print("\n\n\n\n\n\n")
+        print(search_results)
+        print("\n\n\n\n\n\n")
+        for deezer_result in search_results:
+            if search_results.index(deezer_result) > 4 and best_result.get("found") is not False:
+                break
+            this_duration_diff = abs(spotify_track_seconds - deezer_result["duration"])
+            if this_duration_diff <= 2:
+                duration_diff_with_the_best = abs(best_result["duration"] - spotify_track_seconds)
+                if (this_duration_diff < duration_diff_with_the_best) or (this_duration_diff == duration_diff_with_the_best and deezer_result["rank"] > best_result["rank"]):
+                    best_result = deezer_result
+
+        print(search_query, best_result)
+        if best_result.get("found") is False:
             return {"error": {"song_name": search_query}}
 
-        track_details = self.deezer.get_song_infos_from_deezer_website(track["id"])
+        track_details = self.deezer.get_song_infos_from_deezer_website(best_result["id"])
         music_path = self.deezer.download_song(track_details, unique_name_suffix)[
             "music_path"
         ]

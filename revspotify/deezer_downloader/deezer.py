@@ -453,14 +453,15 @@ def deezer_search(search, search_type=TYPE_TRACK):
     for item in resp:
         i = {}
         if search_type == TYPE_ALBUM:
-            i['id'] = str(item['id'])
-            i['id_type'] = TYPE_ALBUM
-            i['album'] = item['title']
-            i['album_id'] = item['id']
-            i['img_url'] = item['cover_small']
-            i['artist'] = item['artist']['name']
-            i['title'] = ''
-            i['preview_url'] = ''
+            #i['id'] = str(item['id'])
+            #i['id_type'] = TYPE_ALBUM
+            #i['album'] = item['title']
+            #i['album_id'] = item['id']
+            #i['img_url'] = item['cover_small']
+            #i['artist'] = item['artist']['name']
+            #i['title'] = ''
+            #i['preview_url'] = ''
+            continue
         if search_type == TYPE_TRACK:
             i['id'] = str(item['id'])
             i['duration'] = item['duration']
@@ -476,16 +477,18 @@ def deezer_search(search, search_type=TYPE_TRACK):
             i['cover_big'] = item['album']['cover_big']
             i['cover_small'] = item['album']['cover_small']
             i['cover_medium'] = item['album']['cover_medium']
+            i['rank'] = item['rank']
 
         if search_type == TYPE_ALBUM_TRACK:
-            i['id'] = str(item['SNG_ID'])
-            i['id_type'] = TYPE_TRACK
-            i['title'] = item['SNG_TITLE']
-            i['img_url'] = '' # item['album']['cover_small']
-            i['album'] = item['ALB_TITLE']
-            i['album_id'] = item['ALB_ID']
-            i['artist'] = item['ART_NAME']
-            i['preview_url'] = next(media['HREF'] for media in item['MEDIA'] if media['TYPE'] == 'preview')
+            #i['id'] = str(item['SNG_ID'])
+            #i['id_type'] = TYPE_TRACK
+            #i['title'] = item['SNG_TITLE']
+            #i['img_url'] = '' # item['album']['cover_small']
+            #i['album'] = item['ALB_TITLE']
+            #i['album_id'] = item['ALB_ID']
+            #i['artist'] = item['ART_NAME']
+            #i['preview_url'] = next(media['HREF'] for media in item['MEDIA'] if media['TYPE'] == 'preview')
+            continue
 
         return_nice.append(i)
     return return_nice

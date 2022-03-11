@@ -1,8 +1,8 @@
 version: '3'
 services:
-  telegram_bot:
-    image: telegram_bot
-    container_name: telegram_bot
+  revspotify_bot:
+    image: revspotify_bot
+    container_name: revspotify_bot
     volumes:
       - ./revspotify:/app
     build:
