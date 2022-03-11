@@ -61,7 +61,7 @@ class Spotify:
     def download_track_from_youtube(self, results, unique_name_suffix=None):
         song = results["name"]
         artist = results["artists"][0]["name"]
-        YTSEARCH = str(song + " " + artist)
+        search_query = str(song + " " + artist)
         artistfinder = results["artists"]
         album = results["album"]["name"]
         realese_date = int(results["album"]["release_date"][:4])
@@ -94,7 +94,7 @@ class Spotify:
             music_path = f"static/songs/{trackname}.mp3"
 
         # search for music on youtube
-        yt_results = self.humanize_youtube_results(list(YoutubeSearch(str(YTSEARCH)).to_dict()))
+        yt_results = self.humanize_youtube_results(list(YoutubeSearch(str(search_query)).to_dict()))
         best_result = {"duration": float("inf"), "views": -1, "found": False}
         for yt_result in yt_results:
             if yt_results.index(yt_result) > 4 and best_result.get("found") is not False:
@@ -105,6 +105,7 @@ class Spotify:
                 if (this_duration_diff < duration_diff_with_the_best) or (this_duration_diff == duration_diff_with_the_best and yt_result["views"] > best_result["views"]):
                     best_result = yt_result
 
+        print(search_query, best_result)
         if best_result.get("found") is False:
             return {"error": {"song_name": song}}
 
@@ -348,6 +349,7 @@ class Deezer:
                 if (this_duration_diff < duration_diff_with_the_best) or (this_duration_diff == duration_diff_with_the_best and deezer_result["rank"] > best_result["rank"]):
                     best_result = deezer_result
 
+        print(search_query, best_result)
         if best_result.get("found") is False:
             return {"error": {"song_name": search_query}}
 
