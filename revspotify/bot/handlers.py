@@ -6,11 +6,13 @@ from bot.communications.message_handler import MessageHandler
 from bot.utils import extract_spotify_id
 from services.spotify import SpotifyService
 from services.downloader import download_track
+from logger import Logger
+
+logger = Logger("handlers")
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send a message when the command /start is issued."""
-    user = update.effective_user
+    logger.info(f"Received /start command from {update.effective_user.username}")
     await update.message.reply_text(MessageHandler().get_message("welcome_message"))
 
 
@@ -18,27 +20,10 @@ async def handle_track(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
     track_info: dict,
-    send_wait_message: bool = True,
-    send_cover: bool = True,
 ) -> None:
-    messages_to_delete = []
-
-    if send_wait_message:
-        proccessing_message = await update.message.reply_text(
-            MessageHandler().get_message("processing_message")
-        )
-        messages_to_delete.append(proccessing_message.message_id)
-
-    if send_cover:
-        cover_photo_url = track_info["album"]["images"][0]["url"]
-        caption = MessageHandler().get_message(
-            "track_caption",
-            track_name=track_info["name"],
-            artist_name=track_info["artists"][0]["name"],
-            album_name=track_info["album"]["name"],
-            release_date=track_info["album"]["release_date"],
-        )
-        await update.message.reply_photo(photo=cover_photo_url, caption=caption)
+    logger.info(
+        f"Downloading track: {track_info['name']} by {track_info['artists'][0]['name']}"
+    )
 
     track_info_summery = {
         "track_name": track_info["name"],
@@ -49,33 +34,52 @@ async def handle_track(
         "cover_photo_url": track_info["album"]["images"][0]["url"],
     }
 
+    logger.info("Downloading track...")
     track_response = download_track(track_info_summery)
     if track_response.is_success():
+        logger.info("Sending audio file")
         await update.message.reply_audio(audio=track_response.music_address)
+        logger.info("Deleting audio file")
         os.remove(track_response.music_address)
     else:
+        logger.error(f"Error downloading track: {track_response.error}")
         await update.message.reply_text(track_response.error)
-
-    for message_id in messages_to_delete:
-        await context.bot.delete_message(
-            chat_id=update.effective_chat.id, message_id=message_id
-        )
 
 
 async def download_spotify_track(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
+    logger.info(
+        f"Received Spotify track link: {update.message.text} from {update.effective_user.username}"
+    )
     track_id = extract_spotify_id(update.message.text, "track")
     track_info = SpotifyService().get_track_info(track_id)
+    # send track cover once
+    logger.info("Sending track cover photo")
+    cover_photo_url = track_info["album"]["images"][0]["url"]
+    caption = MessageHandler().get_message(
+        "track_caption",
+        track_name=track_info["name"],
+        artist_name=track_info["artists"][0]["name"],
+        album_name=track_info["album"]["name"],
+        release_date=track_info["album"]["release_date"],
+    )
+    await update.message.reply_photo(photo=cover_photo_url, caption=caption)
     await handle_track(update, context, track_info)
+    await update.message.reply_text(MessageHandler().get_message("task_done"))
+    logger.info("Track download completed")
 
 
 async def download_spotify_playlist(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
+    logger.info(
+        f"Received Spotify playlist link: {update.message.text} from {update.effective_user.username}"
+    )
     playlist_id = extract_spotify_id(update.message.text, "playlist")
     playlist_info = SpotifyService().get_playlist_info(playlist_id)
     # send playlist cover once
+    logger.info("Sending playlist cover photo")
     cover_photo_url = playlist_info["images"][0]["url"]
     caption = MessageHandler().get_message(
         "playlist_caption",
@@ -86,19 +90,24 @@ async def download_spotify_playlist(
     await update.message.reply_photo(photo=cover_photo_url, caption=caption)
     for track in playlist_info["tracks"]["items"]:
         if track["track"]["is_local"] or track["track"]["track"] is not True:
+            logger.info("Skipping local track")
             continue
         track_info = SpotifyService().get_track_info(track["track"]["id"])
-        await handle_track(
-            update, context, track_info, send_wait_message=False, send_cover=False
-        )
+        await handle_track(update, context, track_info)
+    await update.message.reply_text(MessageHandler().get_message("task_done"))
+    logger.info("Playlist download completed")
 
 
 async def download_spotify_album(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
+    logger.info(
+        f"Received Spotify album link: {update.message.text} from {update.effective_user.username}"
+    )
     album_id = extract_spotify_id(update.message.text, "album")
     album_info = SpotifyService().get_album_info(album_id)
     # Send album cover once
+    logger.info("Sending album cover photo")
     cover_photo_url = album_info["images"][0]["url"]
     caption = MessageHandler().get_message(
         "album_caption",
@@ -109,17 +118,21 @@ async def download_spotify_album(
     await update.message.reply_photo(photo=cover_photo_url, caption=caption)
     for track in album_info["tracks"]["items"]:
         track_info = SpotifyService().get_track_info(track["id"])
-        await handle_track(
-            update, context, track_info, send_wait_message=False, send_cover=False
-        )
+        await handle_track(update, context, track_info)
+    await update.message.reply_text(MessageHandler().get_message("task_done"))
+    logger.info("Album download completed")
 
 
 async def download_spotify_artist(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
+    logger.info(
+        f"Received Spotify artist link: {update.message.text} from {update.effective_user.username}"
+    )
     artist_id = extract_spotify_id(update.message.text, "artist")
     artist_info = SpotifyService().get_artist_info(artist_id)
     # Send artist cover once
+    logger.info("Sending artist cover photo")
     cover_photo_url = artist_info["images"][0]["url"]
     followers = artist_info["followers"]["total"]
     followers = "{:,}".format(followers)
@@ -132,6 +145,6 @@ async def download_spotify_artist(
     await update.message.reply_photo(photo=cover_photo_url, caption=caption)
     for track in artist_info["top_tracks"]:
         track_info = SpotifyService().get_track_info(track["id"])
-        await handle_track(
-            update, context, track_info, send_wait_message=False, send_cover=False
-        )
+        await handle_track(update, context, track_info)
+    await update.message.reply_text(MessageHandler().get_message("task_done"))
+    logger.info("Artist download completed")
