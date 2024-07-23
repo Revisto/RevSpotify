@@ -13,7 +13,7 @@ def update_metadata(file_path, track_info):
 
     # Update text metadata
     audiofile.tag.title = track_info["track_name"]
-    audiofile.tag.artist = ", ".join(track_info["artist_names"])
+    audiofile.tag.artist = track_info["artist_names"][0]
     audiofile.tag.album = track_info.get("album_name", "")
     audiofile.tag.release_date = track_info.get("release_date", "")
     logger.info(f"Updated text metadata for {file_path}")
