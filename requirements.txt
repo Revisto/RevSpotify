@@ -1,0 +1,7 @@
+python-telegram-bot
+python-dotenv
+spotipy
+py-deezer
+unidecode
+eyed3
+beautifulsoup4
