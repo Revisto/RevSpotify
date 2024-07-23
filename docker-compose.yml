@@ -1,0 +1,10 @@
+version: '3'
+services:
+  revspotify:
+    image: revspotify
+    container_name: revspotify
+    volumes:
+      - ./revspotify:/app
+    build:
+      context: .
+      dockerfile: Dockerfile
