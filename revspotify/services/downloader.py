@@ -9,7 +9,7 @@ from logger import Logger
 logger = Logger("downloader")
 
 def download_track(track_info: dict):
-    logger.info(f"Starting download for track: {track_info['track_name']} by {' '.join(track_info['artist_names'])}")
+    logger.info(f"Starting download for track: {track_info['track_name']} by {', '.join(track_info['artist_names'])}")
     deezer_service = DeezerService()
     deezer_query = f"{track_info['track_name']} {' '.join(track_info['artist_names'])}"
     logger.debug(f"Deezer query: {deezer_query}")
@@ -33,5 +33,5 @@ def download_track(track_info: dict):
     # logger.info("Attempting download from YouTube")
     # download_from_youtube(track_info)
 
-    logger.warning(f"No matching track found in any service. for track: {track_info['track_name']} by {' '.join(track_info['artist_names'])}")
+    logger.warning(f"No matching track found in any service. for track: {track_info['track_name']} by {', '.join(track_info['artist_names'])}")
     return Response(error="No matching track found.", service="all")
