@@ -31,3 +31,9 @@ class SpotifyService(metaclass=Singleton):
     def get_album_info(self, album_id):
         album_info = self.sp.album(album_id)
         return album_info
+
+    def get_artist_info(self, artist_id):
+        artist_info = self.sp.artist(artist_id)
+        artist_top_tracks = self.sp.artist_top_tracks(artist_id)
+        artist_info["top_tracks"] = artist_top_tracks["tracks"]
+        return artist_info

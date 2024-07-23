@@ -6,6 +6,7 @@ from bot.handlers import (
     download_spotify_track,
     download_spotify_playlist,
     download_spotify_album,
+    download_spotify_artist,
 )
 from config.config import Config
 
@@ -33,6 +34,12 @@ def main() -> None:
         MessageHandler(
             filters.Regex(r"https?://(open\.)?spotify\.com/playlist/([a-zA-Z0-9]+)"),
             download_spotify_playlist,
+        )
+    )
+    application.add_handler(
+        MessageHandler(
+            filters.Regex(r"https?://(open\.)?spotify\.com/artist/([a-zA-Z0-9]+)"),
+            download_spotify_artist,
         )
     )
 

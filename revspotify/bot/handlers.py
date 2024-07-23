@@ -112,3 +112,26 @@ async def download_spotify_album(
         await handle_track(
             update, context, track_info, send_wait_message=False, send_cover=False
         )
+
+
+async def download_spotify_artist(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    artist_id = extract_spotify_id(update.message.text, "artist")
+    artist_info = SpotifyService().get_artist_info(artist_id)
+    # Send artist cover once
+    cover_photo_url = artist_info["images"][0]["url"]
+    followers = artist_info["followers"]["total"]
+    followers = "{:,}".format(followers)
+    caption = MessageHandler().get_message(
+        "artist_caption",
+        artist_name=artist_info["name"],
+        followers=followers,
+        genres=", ".join(artist_info["genres"][:3]),
+    )
+    await update.message.reply_photo(photo=cover_photo_url, caption=caption)
+    for track in artist_info["top_tracks"]:
+        track_info = SpotifyService().get_track_info(track["id"])
+        await handle_track(
+            update, context, track_info, send_wait_message=False, send_cover=False
+        )

@@ -10,6 +10,7 @@ RevSpotify is a fast, useful telegram bot to have your Spotify music on Telegram
 - Download tracks from Spotify
 - Download albums from Spotify
 - Download playlists from Spotify
+- Download artist's top tracks from Spotify
 
 ## ⚙️ Installation
 
