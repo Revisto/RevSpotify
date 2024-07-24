@@ -65,7 +65,11 @@ async def download_spotify_track(
         release_date=track_info["album"]["release_date"],
     )
     await update.message.reply_photo(photo=cover_photo_url, caption=caption)
+    waiting_message = await update.message.reply_text(
+        MessageHandler().get_message("downloading_track", track_name=track_info["name"])
+    )
     await handle_track(update, context, track_info)
+    await waiting_message.delete()
     await update.message.reply_text(MessageHandler().get_message("task_done"))
     logger.info("Track download completed")
 
@@ -93,7 +97,14 @@ async def download_spotify_playlist(
             logger.info("Skipping local track")
             continue
         track_info = SpotifyService().get_track_info(track["track"]["id"])
+        waiting_message = await update.message.reply_text(
+            MessageHandler().get_message(
+                "downloading_track", track_name=track_info["name"]
+            )
+        )
         await handle_track(update, context, track_info)
+        await waiting_message.delete()
+
     await update.message.reply_text(MessageHandler().get_message("task_done"))
     logger.info("Playlist download completed")
 
@@ -118,7 +129,13 @@ async def download_spotify_album(
     await update.message.reply_photo(photo=cover_photo_url, caption=caption)
     for track in album_info["tracks"]["items"]:
         track_info = SpotifyService().get_track_info(track["id"])
+        waiting_message = await update.message.reply_text(
+            MessageHandler().get_message(
+                "downloading_track", track_name=track_info["name"]
+            )
+        )
         await handle_track(update, context, track_info)
+        await waiting_message.delete()
     await update.message.reply_text(MessageHandler().get_message("task_done"))
     logger.info("Album download completed")
 
@@ -145,6 +162,12 @@ async def download_spotify_artist(
     await update.message.reply_photo(photo=cover_photo_url, caption=caption)
     for track in artist_info["top_tracks"]:
         track_info = SpotifyService().get_track_info(track["id"])
+        waiting_message = await update.message.reply_text(
+            MessageHandler().get_message(
+                "downloading_track", track_name=track_info["name"]
+            )
+        )
         await handle_track(update, context, track_info)
+        await waiting_message.delete()
     await update.message.reply_text(MessageHandler().get_message("task_done"))
     logger.info("Artist download completed")

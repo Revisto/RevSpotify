@@ -11,5 +11,6 @@
     "album_caption": "Album: {album_name}\nArtist: {artist_name}\nRelease Date: {release_date}",
     "playlist_caption": "Playlist: {playlist_name}\nOwner: {owner_name}\nTotal Tracks: {total_tracks}",
     "artist_caption": "Artist: {artist_name}\nTotal Followers: {followers}\nGenres: {genres}",
-    "task_done": "Everything is done!"
+    "task_done": "Everything is done!",
+    "downloading_track": "Downloading {track_name}..."
 }
