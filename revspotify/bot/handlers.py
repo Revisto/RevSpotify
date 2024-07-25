@@ -4,8 +4,8 @@ import os
 
 from bot.communications.message_handler import MessageHandler
 from bot.utils import extract_spotify_id
-from services.spotify import SpotifyService
-from services.downloader import download_track
+from services.downloaders.spotify import SpotifyService
+from services.downloaders.downloader import download_track
 from logger import Logger
 
 logger = Logger("handlers")
@@ -60,7 +60,7 @@ async def download_spotify_track(
     caption = MessageHandler().get_message(
         "track_caption",
         track_name=track_info["name"],
-        artist_name=track_info["artists"][0]["name"],
+        artist_name=", ".join([artist["name"] for artist in track_info["artists"]]),
         album_name=track_info["album"]["name"],
         release_date=track_info["album"]["release_date"],
     )
@@ -123,7 +123,7 @@ async def download_spotify_album(
     caption = MessageHandler().get_message(
         "album_caption",
         album_name=album_info["name"],
-        artist_name=album_info["artists"][0]["name"],
+        artist_name=", ".join([artist["name"] for artist in track_info["artists"]]),
         release_date=album_info["release_date"],
     )
     await update.message.reply_photo(photo=cover_photo_url, caption=caption)

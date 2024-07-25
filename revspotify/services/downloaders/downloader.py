@@ -1,4 +1,4 @@
-from services.deezer import DeezerService
+from services.downloaders.deezer import DeezerService
 from services.response import Response
 from services.metadata import update_metadata
 from logger import Logger
