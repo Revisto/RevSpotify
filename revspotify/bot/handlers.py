@@ -1,5 +1,7 @@
-from telegram import Update
+from telegram import Update, InputFile
 from telegram.ext import ContextTypes
+from io import BytesIO
+import requests
 import os
 
 from bot.communications.message_handler import MessageHandler
@@ -7,6 +9,7 @@ from bot.utils import extract_spotify_id
 from services.downloaders.spotify import SpotifyService
 from services.downloaders.downloader import download_track
 from logger import Logger
+
 
 logger = Logger("handlers")
 
@@ -33,12 +36,20 @@ async def handle_track(
         "release_date": track_info["album"]["release_date"],
         "cover_photo_url": track_info["album"]["images"][0]["url"],
     }
-
+    # print all album cover
+    for image in track_info["album"]["images"]:
+        print(image["url"])
     logger.info("Downloading track...")
     track_response = download_track(track_info_summery)
     if track_response.is_success():
+        logger.info("Fetching track thumbnail")
+        thumbnail_url = track_info["album"]["images"][0]["url"]
+        response = requests.get(thumbnail_url)
+        image = BytesIO(response.content)
+        
         logger.info("Sending audio file")
-        await update.message.reply_audio(audio=track_response.music_address)
+        await update.message.reply_audio(audio=track_response.music_address, thumbnail=InputFile(image, filename="thumbnail.jpg"))
+        
         logger.info("Deleting audio file")
         os.remove(track_response.music_address)
     else:
